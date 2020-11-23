@@ -18,6 +18,9 @@ import java.nio.charset.Charset
 open class HiddenSecretsPlugin : Plugin<Project> {
     companion object {
         private const val APP_MAIN_FOLDER = "src/main/"
+        private const val KEY_PLACEHOLDER = "YOUR_KEY_GOES_HERE"
+        private const val PACKAGE_PLACEHOLDER = "YOUR_PACKAGE_GOES_HERE"
+        private const val KOTLIN_FILE_NAME = "Secrets.kt"
 
         //Tasks
         private const val TASK_UNZIP_HIDDEN_SECRETS = "unzipHiddenSecrets"
@@ -136,6 +139,22 @@ open class HiddenSecretsPlugin : Plugin<Project> {
         }
 
         /**
+         * Return the path to the Secrets.kt file.
+         */
+        fun getSecretsKotlinFile(): File? {
+            val directory = project.file(APP_MAIN_FOLDER)
+            directory.walkBottomUp().forEach {
+                //print("\n")
+                //print(it)
+                if (it.name == KOTLIN_FILE_NAME) {
+                    print("$KOTLIN_FILE_NAME found in ${it.absolutePath}\n")
+                    return it
+                }
+            }
+            return null
+        }
+
+        /**
          * Copy Cpp files from the lib to the Android project if they don't exist yet
          */
         fun copyCppFiles() {
@@ -218,6 +237,8 @@ open class HiddenSecretsPlugin : Plugin<Project> {
             dependsOn(TASK_UNZIP_HIDDEN_SECRETS)
 
             doLast {
+                //Assert that the key is present
+                getKeyParam()
                 //Copy files if they do not exist
                 copyCppFiles()
                 copyKotlinFiles()
@@ -233,13 +254,13 @@ open class HiddenSecretsPlugin : Plugin<Project> {
                     if (text.contains(obfuscatedKey)) {
                         println("Key already added in C++ !")
                     }
-                    if (text.contains("YOUR_KEY_GOES_HERE")) {
+                    if (text.contains(KEY_PLACEHOLDER)) {
                         //Replace package name
-                        text = text.replace("YOUR_PACKAGE_GOES_HERE", Utils.getUnderScoredPackageName(packageName))
+                        text = text.replace(PACKAGE_PLACEHOLDER, Utils.getUnderScoredPackageName(packageName))
                         //Replace key name
                         text = text.replace("YOUR_KEY_NAME_GOES_HERE", keyName)
                         //Replace demo key
-                        text = text.replace("{YOUR_KEY_GOES_HERE}", obfuscatedKey)
+                        text = text.replace("{$KEY_PLACEHOLDER}", obfuscatedKey)
                         secretsCpp.writeText(text)
                     } else {
                         //Add new key
@@ -251,10 +272,14 @@ open class HiddenSecretsPlugin : Plugin<Project> {
                 }
 
                 //Add method in Kotlin code
-                val secretsKotlin = getKotlinDestination(packageName, "Secrets.kt")
+                var secretsKotlin = getSecretsKotlinFile()
+                if (secretsKotlin == null) {
+                    //File not found in project
+                    secretsKotlin = getKotlinDestination(packageName, KOTLIN_FILE_NAME)
+                }
                 if (secretsKotlin.exists()) {
                     var text = secretsKotlin.readText(Charset.defaultCharset())
-                    text = text.replace("YOUR_PACKAGE_GOES_HERE", packageName)
+                    text = text.replace(PACKAGE_PLACEHOLDER, packageName)
                     if (text.contains(keyName)) {
                         println("Method already added in Kotlin !")
                     }
@@ -276,6 +301,12 @@ open class HiddenSecretsPlugin : Plugin<Project> {
         {
             doLast {
                 println("APP PACKAGE NAME = " + getPackageNameParam())
+            }
+        }
+
+        project.task("kotlin") {
+            doLast {
+                getSecretsKotlinFile()
             }
         }
     }

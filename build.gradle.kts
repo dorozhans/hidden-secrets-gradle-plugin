@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.klaxit.hiddensecrets"
-version = "0.1.0"
+version = "0.1.1"
 
 repositories {
     mavenCentral()
@@ -15,8 +15,8 @@ repositories {
 dependencies {
     implementation("com.android.tools.build:gradle:4.0.0")
 
-    testImplementation("io.kotlintest:kotlintest-runner-junit5:3.1.10")
-    testImplementation("junit:junit:4.13")
+    testImplementation("io.kotlintest:kotlintest-runner-junit5:3.1.11")
+    testImplementation("junit:junit:4.13.1")
 }
 
 configure<JavaPluginConvention> {
