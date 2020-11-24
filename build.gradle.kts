@@ -1,6 +1,7 @@
 plugins {
     `java-gradle-plugin`
     `kotlin-dsl`
+    id("io.gitlab.arturbosch.detekt") version "1.14.2"
 }
 
 group = "com.klaxit.hiddensecrets"
@@ -15,8 +16,8 @@ repositories {
 dependencies {
     implementation("com.android.tools.build:gradle:4.0.0")
 
-    testImplementation("io.kotlintest:kotlintest-runner-junit5:3.1.10")
-    testImplementation("junit:junit:4.13")
+    testImplementation("io.kotlintest:kotlintest-runner-junit5:3.1.11")
+    testImplementation("junit:junit:4.13.1")
 }
 
 configure<JavaPluginConvention> {

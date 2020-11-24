@@ -8,7 +8,7 @@ It uses a combination of obfuscation techniques to do so :
 - secret is obfuscated using the reversible XOR operator so it never appears in plain sight,
 - obfuscated secret is stored in a NDK binary as an hexadecimal array, so it is really hard to spot / put together from a disassembly,
 - the obfuscating string is not persisted in the binary to force runtime evaluation (ie : prevent the compiler from disclosing the secret by optimizing the de-obfuscation logic),
-- optionnaly, anyone can provide it's own encoding / decoding algorithm when using the plugin to add an additional security layer.
+- optionally, anyone can provide its own encoding / decoding algorithm when using the plugin to add an additional security layer.
 
 This plugin is **used in production** at [Klaxit - Covoiturage quotidien](https://play.google.com/store/apps/details?id=com.wayzup.wayzupapp). Our engineering team at Klaxit will provide its best effort to maintain this project.
 
