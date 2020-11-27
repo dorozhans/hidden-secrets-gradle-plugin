@@ -2,8 +2,8 @@
 
 #include <jni.h>
 
-#include "sha256.hpp"
-#include "sha256.cpp"
+#include "SHA256.hpp"
+#include "SHA256.cpp"
 
 /* Copyright (c) 2020-present Klaxit SAS
 *
@@ -46,19 +46,38 @@ jstring getOriginalKey(
     const char *obfuscatingStr = pEnv->GetStringUTFChars(obfuscatingJStr, NULL);
     const char *obfuscator = sha256(obfuscatingStr);
 
+   int len =  strlen(obfuscator);
+
     // Apply a XOR between the obfuscated key and the obfuscating string to get original sting
-    char out[obfuscatedSecretSize + 1];
+//    char out[obfuscatedSecretSize + 1];
+    char out[obfuscatedSecretSize];
     for (int i = 0; i < obfuscatedSecretSize; i++) {
-        out[i] = obfuscatedSecret[i] ^ obfuscator[i % strlen(obfuscator)];
+        out[i] = obfuscatedSecret[i] ^ obfuscator[i % len];
     }
 
     // Add string terminal delimiter
-    out[obfuscatedSecretSize] = 0x0;
-
+//    out[obfuscatedSecretSize] = 0x0;
+//
     //(Optional) To improve key security
     customDecode(out);
 
-    return pEnv->NewStringUTF(out);
+    jobject bb = pEnv->NewDirectByteBuffer(out, obfuscatedSecretSize);
+//    jobject bb = pEnv->NewDirectByteBuffer(out, obfuscatedSecretSize + 1);
+    jclass cls_Charset = pEnv->FindClass("java/nio/charset/Charset");
+    jmethodID mid_Charset_forName = pEnv->GetStaticMethodID(cls_Charset, "forName", "(Ljava/lang/String;)Ljava/nio/charset/Charset;");
+    jobject charset = pEnv->CallStaticObjectMethod(cls_Charset, mid_Charset_forName, pEnv->NewStringUTF("UTF-8"));
+
+    jmethodID mid_Charset_decode = pEnv->GetMethodID(cls_Charset, "decode", "(Ljava/nio/ByteBuffer;)Ljava/nio/CharBuffer;");
+    jobject cb = pEnv->CallObjectMethod(charset, mid_Charset_decode, bb);
+    pEnv->DeleteLocalRef(bb);
+
+    jclass cls_CharBuffer = pEnv->FindClass("java/nio/CharBuffer");
+    jmethodID mid_CharBuffer_toString = pEnv->GetMethodID(cls_CharBuffer, "toString", "()Ljava/lang/String;");
+    jstring str = static_cast<jstring>(pEnv->CallObjectMethod(cb, mid_CharBuffer_toString));
+
+//    jstring g = pEnv->NewStringUTF(out);
+
+    return str;
 }
 
 extern "C"
@@ -67,6 +86,6 @@ Java_YOUR_PACKAGE_GOES_HERE_Secrets_getYOUR_KEY_NAME_GOES_HERE(
         JNIEnv *pEnv,
         jobject pThis,
         jstring packageName) {
-    char obfuscatedSecret[] = {YOUR_KEY_GOES_HERE};
+        char obfuscatedSecret[] = {YOUR_KEY_GOES_HERE};
     return getOriginalKey(obfuscatedSecret, sizeof(obfuscatedSecret), packageName, pEnv);
 }
