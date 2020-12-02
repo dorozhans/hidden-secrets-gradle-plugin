@@ -46,23 +46,17 @@ jstring getOriginalKey(
     const char *obfuscatingStr = pEnv->GetStringUTFChars(obfuscatingJStr, NULL);
     const char *obfuscator = sha256(obfuscatingStr);
 
-   int len =  strlen(obfuscator);
+    int len =  strlen(obfuscator);
 
-    // Apply a XOR between the obfuscated key and the obfuscating string to get original sting
-//    char out[obfuscatedSecretSize + 1];
     char out[obfuscatedSecretSize];
     for (int i = 0; i < obfuscatedSecretSize; i++) {
         out[i] = obfuscatedSecret[i] ^ obfuscator[i % len];
     }
 
-    // Add string terminal delimiter
-//    out[obfuscatedSecretSize] = 0x0;
-//
     //(Optional) To improve key security
     customDecode(out);
 
     jobject bb = pEnv->NewDirectByteBuffer(out, obfuscatedSecretSize);
-//    jobject bb = pEnv->NewDirectByteBuffer(out, obfuscatedSecretSize + 1);
     jclass cls_Charset = pEnv->FindClass("java/nio/charset/Charset");
     jmethodID mid_Charset_forName = pEnv->GetStaticMethodID(cls_Charset, "forName", "(Ljava/lang/String;)Ljava/nio/charset/Charset;");
     jobject charset = pEnv->CallStaticObjectMethod(cls_Charset, mid_Charset_forName, pEnv->NewStringUTF("UTF-8"));
@@ -74,8 +68,6 @@ jstring getOriginalKey(
     jclass cls_CharBuffer = pEnv->FindClass("java/nio/CharBuffer");
     jmethodID mid_CharBuffer_toString = pEnv->GetMethodID(cls_CharBuffer, "toString", "()Ljava/lang/String;");
     jstring str = static_cast<jstring>(pEnv->CallObjectMethod(cb, mid_CharBuffer_toString));
-
-//    jstring g = pEnv->NewStringUTF(out);
 
     return str;
 }
